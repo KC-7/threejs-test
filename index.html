@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>KC-7 | First ThreeJS App</title>
+    <style>
+        /* default styles */
+        body {
+            margin: 0;
+        }
+
+        /* styles for screens smaller than 600px wide */
+        @media (max-width: 600px) {
+            body {
+                font-size: 12px;
+            }
+        }
+
+        /* styles for screens between 600px and 900px wide */
+        @media (min-width: 600px) and (max-width: 900px) {
+            body {
+                font-size: 16px;
+            }
+        }
+
+        /* styles for screens wider than 900px */
+        @media (min-width: 900px) {
+            body {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <script src="js/three.js"></script>
+    <script>
+        // Create a new scene
+        var scene = new THREE.Scene();
+
+        // Create a new camera
+        var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+        // Create a new WebGL renderer and add it to the document
+        var renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Add a background texture to the scene
+        var textureLoader = new THREE.TextureLoader();
+        var backgroundTexture = textureLoader.load("imgs/bg.jpg");
+        scene.background = backgroundTexture;
+
+        // Add a pyramid object to the scene
+        var geometry = new THREE.ConeGeometry(1, 2, 3);
+        var material = new THREE.MeshBasicMaterial({
+            color: 0x00ff00, // Set the color to electric green
+            transparent: true, // Make the material semi-opaque
+            opacity: 0.75 // Set the opacity to 75%
+        });
+        var pyramid = new THREE.Mesh(geometry, material);
+        scene.add(pyramid);
+
+        // Position the camera
+        camera.position.z = 5;
+
+        // Animate the pyramid rotation
+        var animate = function () {
+            requestAnimationFrame(animate);
+
+            pyramid.rotation.x += 0.01;
+            pyramid.rotation.y += 0.01;
+
+            renderer.render(scene, camera);
+        };
+
+        // Change object color on click
+        function onDocumentClick(event) {
+            event.preventDefault();
+
+            // Get the mouse coordinates
+            var mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+            var mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            // Create a vector and unproject it from the camera position
+            var vector = new THREE.Vector3(mouseX, mouseY, 0.5);
+            vector.unproject(camera);
+
+            // Create a raycaster to detect object intersection
+            var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
+            var intersects = raycaster.intersectObject(pyramid);
+
+            if (intersects.length > 0) {
+                // If the object is clicked, set a random color
+                pyramid.material.color.setHex(Math.random() * 0xffffff);
+            } else {
+                // If the object is not clicked, set the color back to green
+                pyramid.material.color.set(0x00ff00);
+            }
+        }
+
+        // Add event listener for clicks on the document
+        document.addEventListener('click', onDocumentClick, false);
+
+        // Add a black outline to the pyramid
+        var edges = new THREE.EdgesGeometry(pyramid.geometry);
+        var outlineMaterial = new THREE.LineBasicMaterial({
+            color: 0x000000, // Set the outline color to black
+        });
+        var outline = new THREE.LineSegments(edges, outlineMaterial);
+        pyramid.add(outline);
+
+        // Start the animation loop
+        animate();
+    </script>
+</body>
+
+</html>
